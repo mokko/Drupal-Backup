@@ -9,7 +9,7 @@ use lib '/home/Mengel/projects/Drupal-Credentials/lib';
 use Drupal::Credentials;
 use lib '/home/Mengel/projects/Drupal-Backup/lib';
 use Drupal::Backup;
-$Drupal::Backup::DebugLevel=1;
+$Drupal::Backup::DebugLevel = 1;
 
 #DEBUG
 use Data::Dumper;
@@ -53,20 +53,17 @@ More concretely
 
 =cut
 
-my $config=Drupal::Backup->new();
-my $drupal = Drupal::Credentials->new( $config->{drupal_sites} );
+my $bm     = Drupal::Backup->new("$ENV{HOME}/.drubak.yml");
+my $drupal = Drupal::Credentials->new( $bm->{drupal_sites} );
 
-{
-	my $install;
-	GetOptions( 'install:s' => \$install ) or pod2usage(2);
-	$config->{install} = $install;
+GetOptions( 'install:s' => \$bm->{install} ) or pod2usage(2);
 
-	#print "install:$install\n";
-	if ($install) {
-		if ( !$drupal->exists($install) ) {
-			print "Error: Specified installation not found!";
-			exit 4;
-		}
+
+#print "install:$install\n";
+if ( $bm->{install} ) {
+	if ( !$drupal->exists( $bm->{install} ) ) {
+		print "Error: Specified installation not found!";
+		exit 4;
 	}
 }
 
@@ -76,14 +73,12 @@ my $drupal = Drupal::Credentials->new( $config->{drupal_sites} );
 
 if ( $ARGV[0] ) {
 	print "which command: $ARGV[0]\n";
-	$config->list($drupal)     if $ARGV[0] eq 'list';
+	$bm->list($drupal)            if $ARGV[0] eq 'list';
 	Drupal::Backup::files( $drupal, ) if $ARGV[0] eq 'files';
-	$config->db( $drupal, $config->{install} ) if $ARGV[0] eq 'db';
+	$bm->db( $drupal, $bm->{install} ) if $ARGV[0] eq 'db';
 	Drupal::Backup::snapshot();
 
 }
 
-print "TT$config->{drupal_sites}\n";
-
-
+print "TT$bm->{drupal_sites}\n";
 

@@ -1,0 +1,7 @@
+#drupal_sites: drupal's sites directory, e.g. /var/www/htdocs/sites [mandatory]
+drupal_sites: "/var/www/vhosts/mimo-project.eu/htdocs/sites"
+drupal_sites: "/home/Mengel/projects/Drupal-Credentials/t/sites"
+#bak_dir: root dir for all backups [mandatory]
+bak_dir: "/home/Mengel/bak/www/mimo-project.eu"
+#drush: abs path to drush[optional, otherwise expect drush in path]
+drush: "usr/bin/drush"

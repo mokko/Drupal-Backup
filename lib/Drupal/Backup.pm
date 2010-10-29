@@ -8,36 +8,43 @@ use YAML::Any qw(LoadFile);
 
 =head1 NAME
 
-Drupal::Backup - The great new Drupal::Backup!
+Drupal::Backup - Backup Drupal with Perl!
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION    = '0.01';
+our $VERSION    = '0.02';
 our $DebugLevel = 0;        # 0 off
                             # 1 warnings
                             # 2 debug
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
+This is work in progress. See README for more mumbling on what this SHOULD be
 
-Perhaps a little code snippet.
+    use Drupal::Backup;
 
-    use Drupal::Backup2;
+    my $bm = Drupal::Backup->new(); #backup manager
+	$bm->list(); #prints recognized
 
-    my $foo = Drupal::Backup2->new();
+
     ...
 
-=head1 EXPORT
+=head1 PACKAGE VARIABLES
+=head2 Drupal::Backup::DebugLevel
 
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
+Drupal::Backup::DebugLevel=0; #be quiet
+Drupal::Backup::DebugLevel=1; #report warnings
+Drupal::Backup::DebugLevel=2; #report warnings and debug messages
 
-=head1 SUBROUTINES/METHODS
+=head1 METHODS
+=head2 my $bm=Drupal::Backup->new("$ENV{HOME}/.drubak.yml");
+
+Construct a new backup manager (bm). Hand over a location config file in yaml
+format. On failure: exit with error message.
 
 =cut
 
@@ -45,13 +52,13 @@ sub warning;
 
 sub new {
 	my $class  = shift;
+	my $config_file = shift;
 	my $config = {};
 
 	if ( $DebugLevel gt 0 ) {
 		print "DebugLevel set to level $DebugLevel\n";
 	}
 
-	my $config_file = "$ENV{HOME}/.drubak.yml";
 	if ( -e $config_file ) {
 		$config = LoadFile($config_file);
 	} else {
@@ -59,9 +66,7 @@ sub new {
 		exit 1;
 	}
 
-	#test config
-
-	#test if variable exists alphabetically
+	#test if mandatory config variables exists (alphabetically)
 	foreach (qw/bak_dir drupal_sites/) {
 		if ( !$config->{$_} ) {
 			print "Error: Config not complete ($_)";
@@ -82,6 +87,12 @@ sub new {
 	bless( $config, $class );
 	return $config;
 }
+
+=head2 warning
+
+
+=cut
+
 
 sub warning {
 	if ( $DebugLevel > 0 ) {
@@ -131,6 +142,11 @@ sub bak_date {
 
 }
 
+=head2 list
+
+=cut
+
+
 sub list {
 	my $self   = shift;
 	my $drupal = shift;
@@ -139,10 +155,20 @@ sub list {
 	}
 	exit;
 }
+=head2 files
+
+TODO
+=cut
+
 
 sub files {
 	exit;
 }
+
+=head2 db
+TODO
+=cut
+
 
 sub db {
 	my $self     = shift;
@@ -169,6 +195,10 @@ sub db {
 	exit;
 
 }
+=head2 snapshot
+TODO
+=cut
+
 
 sub snapshot {
 	exit;
