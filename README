@@ -1,0 +1,152 @@
+== Rationale for Yet Another Drupal Backup Mechanism ==
+One day, backup and migrate stopped working on one of my drupal installations.
+Symptoms: cron.php would never finish and slowed down apache2. That day, I
+decided I needed to think about Drupal backup again.
+
+Drush seems to be an excellent way of dumping Drupal's database, but that's not
+a file backup yet. Also, I would like to automatically dump all DBs for each of
+my Drupal multisite installations.
+
+And it should allow to store the whole thing on a different server. Rsync is
+the preferred solution for transferring files. The least we can do is to
+provide info on how to use/configure rsync for this backup tool.
+
+==Requirements==
+* backup files and db
+* CPAN style
+* easy to use and configure (good interfaces, YAML config file)
+* DB backup files should reside outside of apache's htdocs
+* support different update strategies
+* to be run by cron etc.
+* log rotation mechanism to keep 7 days a week + one per month
+
+==Strategies==
+STRATEGY 1: INCREMENTAL/GIT
+One which I found googling was to use git for incremental updates. Nice. Right
+now, I  don't understand how to replace github as a repository on one of my
+machines, but essentially i would only have to execute a 'git add .' in the right
+directory. Well, I need to look into that.
+
+STRATEGY 2: SNAPSHOT
+Pack everything you need to reconstruct the site in one compressed file
+I would like to put it in
+	$bak_dir/YYYYMMDD.tgz
+where $host = mimo-project.eu
+
+Structure of the snapshot archive file:
+all
+default
+default/db.sql
+www.ex1.com
+www.ex1.com/db.sql
+www.ex2.com
+www.ex2.com/db.sql
+
+STRATEGY 3: DUMP SQL ONLY (per install)
+target: $bak_dir/$install/YYYYMMDDTHHMMSS.sql.tgz
+
+STRATEGY 4: DUMP FILES ONLY (per install)
+target: $bak_dir/$install/YYYYMMDDTHHMMSS.tgz
+
+VARIABLES / CONFIG
+drupal_sites=/var/www/vhosts/mimo-project.eu/htdocs/sites
+bak_dir=~/bak/www/mimo-project.eu
+
+I might need a temp directory:
+~/bak/www/$host/temp/$install-YYYYMMDD.sql
+
+==SEE ALSO==
+http://drewish.com/content/2010/03/using_logrotate_and_drush_to_backup_drupal_sites
+http://search.cpan.org/~paulg/Logfile-Rotate-1.04/Rotate.pm
+
+== Current State ==
+
+This project suggest to do all this and uses perl to glue standard tools together.
+
+It is work in progress and does not yet work. Wait and watch until, we get a
+release ready.
+
+==drubak.pl interface==
+drubak.pl [--install name]
+	makes a snapshot (db/files of all installations in sites directory)
+	don't follow symlinks in sites_dir on default?
+	can be restricted to specific instllation using --install
+drubak.pl [--install name] db
+	dumps and compresses one or more dbs using info from settings.php
+	can be restricted to specific instllation using --install
+		$bak_dir/$install/YYYYMMDDTHHMMSS.sql.tgz
+drubak.pl [--install name] files
+	backups from one or more installations to
+		$bak_dir/$install/YYYYMMDDTHHMMSS.tgz
+
+==Drupal::Credentials==
+Simple interface to Drupal's installation directories ...
+
+
+
+== Old ==
+
+#
+# ~/.drubak CONFIG
+#
+
+#GENERAL
+sites: /var/www/vhosts/xxx/httpdocs/sites
+#STEP1: BACKUP DB
+#destination of backuped db (directory)
+bak_db_dest=/home/User/bak/www
+
+->creates $bak_db_dest/$drupal_project-db/YYYY-MM-DDTHH-MM-DD.tgz
+
+#rotation: how many backup files you want to keep at all times
+bak_db_max=7
+
+#STEP2: Backup Files directory
+#there are two approaches: only the files directory of every drupal
+#installation or the whole drupal
+
+bak_files
+	files
+		dest=/home/User/bak/www
+(taking target from sites)
+
+#STEP3: Backup the complete drupal directory
+bak_files
+	complete=/var/www/vhosts/xxx/httpdocs
+		dest=/home/User/bak/www
+
+
+
+-->with type complete creates
+ 	/home/User/bak/www/$hostname/complete-YYYY-MM-DDTHH-MM-DD.tgz
+respectively
+	$bak_files{complete}{dest}/$drupal-project/files-YYYY-MM-DDTHH-MM-DD.tgz
+-->with type files
+	/home/User/bak/www/$drupal-project/files-YYYY-MM-DDTHH-MM-DD.tgz
+respectively
+	$bak_files{files}{dest}/$drupal-project/files-YYYY-MM-DDTHH-MM-DD.tgz
+
+assuming that this is executed on remote server, use rsync to get these files from remote to local machine
+
+#
+#Drupal::Credentials
+#
+
+#create a new object
+my $credentials=Drupal::Credentials->new($sites_dir);
+#croak if sites_dir does not exist or is inaccessible
+
+#parse sites for db credentials
+#credentials are saved in $credentials object
+$credentials->get
+
+$href=$credentials->foreach
+
+
+$credentials->show
+
+
+
+
+
+
